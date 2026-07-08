@@ -64,8 +64,14 @@ function ChatPanel({
                                 <div className={`mb-2 text-xs font-semibold ${isUser ? 'text-blue-100' : 'text-slate-500'}`}>
                                     {isUser ? '你' : 'AI'}
                                 </div>
-                                <p className="whitespace-pre-wrap text-sm leading-7">{message.content}</p>
-
+                                {!isUser && isGenerating && !message.content ? (
+                                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                                        <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></span>
+                                        正在生成回答...
+                                    </div>
+                                ) : (
+                                    <p className="whitespace-pre-wrap text-sm leading-7">{message.content}</p>
+                                )}
                                 {message.sourceIds && message.sourceIds.length > 0 && (
                                     <button
                                         className="mt-4 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
@@ -84,17 +90,6 @@ function ChatPanel({
                     )
                 })}
 
-                {isGenerating && (
-                    <div className="flex justify-start">
-                        <div className="max-w-[78%] rounded-3xl rounded-bl-lg border border-slate-100 bg-white px-5 py-4 text-slate-800 shadow-sm">
-                            <div className="mb-2 text-xs font-semibold text-slate-500">AI</div>
-                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></span>
-                                正在生成回答...
-                            </div>
-                        </div>
-                    </div>
-                )}
                 <div ref={messageEndRef}></div>
             </div>
 

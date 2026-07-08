@@ -1,5 +1,5 @@
-﻿import { useState } from 'react'
-import { sendChatMessage } from '../lib/api'
+import { useState } from 'react'
+import { sendChatMessageStream } from '../lib/api'
 import type { ChatMessage, Source } from '../type'
 
 export function useChatSession(selectedKbId: number | null) {
@@ -11,44 +11,79 @@ export function useChatSession(selectedKbId: number | null) {
     async function handleSendMessage(content: string) {
         if (!content.trim() || selectedKbId === null) return
 
+        const userMessageId = Date.now()
+        const aiMessageId = userMessageId + 1
+
         const userMessage: ChatMessage = {
-            id: Date.now(),
+            id: userMessageId,
             role: 'user',
             content,
         }
 
-        setMessages((prevMessages) => [...prevMessages, userMessage])
+        const aiMessage: ChatMessage = {
+            id: aiMessageId,
+            role: 'assistant',
+            content: '',
+            sourceIds: [],
+        }
+
+        const history = messages.slice(-6).map((message) => ({
+            role: message.role,
+            content: message.content,
+        }))
+
+        setMessages((prevMessages) => [...prevMessages, userMessage, aiMessage])
+        setCurrentSources([])
+        setSelectedSourceId(null)
         setIsGenerating(true)
 
         try {
-            const history = messages.slice(-6).map((message) => ({
-                role: message.role,
-                content: message.content,
-            }))
-
-            const data = await sendChatMessage({
+            await sendChatMessageStream({
                 knowledgeBaseId: selectedKbId,
                 question: content,
                 history,
+                onSources: (sources) => {
+                    setCurrentSources(sources)
+                    setSelectedSourceId(sources[0]?.id ?? null)
+                    setMessages((prevMessages) => prevMessages.map((message) => {
+                        if (message.id !== aiMessageId) return message
+
+                        return {
+                            ...message,
+                            sourceIds: sources.map((source) => source.id),
+                        }
+                    }))
+                },
+                onText: (text) => {
+                    setMessages((prevMessages) => prevMessages.map((message) => {
+                        if (message.id !== aiMessageId) return message
+
+                        return {
+                            ...message,
+                            content: message.content + text,
+                        }
+                    }))
+                },
+                onError: (messageText) => {
+                    setMessages((prevMessages) => prevMessages.map((message) => {
+                        if (message.id !== aiMessageId) return message
+
+                        return {
+                            ...message,
+                            content: messageText,
+                        }
+                    }))
+                },
             })
-
-            const aiResponse: ChatMessage = {
-                id: Date.now() + 1,
-                role: 'assistant',
-                content: data.answer,
-                sourceIds: data.sources.map((source) => source.id),
-            }
-
-            setMessages((prevMessages) => [...prevMessages, aiResponse])
-            setCurrentSources(data.sources)
-            setSelectedSourceId(data.sources[0]?.id ?? null)
         } catch (error) {
-            const errorMessage: ChatMessage = {
-                id: Date.now() + 1,
-                role: 'assistant',
-                content: '抱歉，获取回答时出错，请稍后再试。',
-            }
-            setMessages((prevMessages) => [...prevMessages, errorMessage])
+            setMessages((prevMessages) => prevMessages.map((message) => {
+                if (message.id !== aiMessageId) return message
+
+                return {
+                    ...message,
+                    content: '\u62b1\u6b49\uff0c\u83b7\u53d6\u56de\u7b54\u65f6\u51fa\u9519\uff0c\u8bf7\u7a0d\u540e\u518d\u8bd5\u3002',
+                }
+            }))
         } finally {
             setIsGenerating(false)
         }

@@ -1,6 +1,11 @@
+import json
+
 from schemas import ChatRequest, ChatResponse, Source, Document
 from services.document_service import list_documents
-from services.deepseek_service import generate_answer_with_deepseek
+from services.deepseek_service import (
+    generate_answer_with_deepseek,
+    generate_answer_stream_with_deepseek,
+)
 
 def split_question_words(question: str):
     words = []
@@ -71,6 +76,14 @@ def generate_chat_response(payload:ChatRequest)->ChatResponse:
         sources=sources,
     )
 
+def build_stream_event(event_type:str,data):
+    return json.dumps(
+        {
+            "type": event_type,
+            "data": data
+        },
+        ensure_ascii=False
+    )+"\n"
 
 def search_documents_by_question(documents, question: str):
     question_words = split_question_words(question)
@@ -126,3 +139,55 @@ def build_ai_context(matched_documents:list[Document],question:str):
                 context+=f"内容：{document.content[start_index:end_index]}\n\n"
                 break
     return context[:MAX_CONTEXT_LENGTH]
+
+def generate_chat_response_stream(payload:ChatRequest):
+    documents=list_documents(payload.knowledge_base_id)
+
+    matched_documents = search_documents_by_question(
+        documents,
+        payload.question,
+    )
+    if not documents:
+        yield build_stream_event("error","当前知识库还没有上传文档，请先上传文档后再提问。")
+        yield build_stream_event("done", None)
+        return
+
+    if not matched_documents:
+        yield build_stream_event("error", f"我没有在当前知识库中找到和「{payload.question}」相关的内容。")
+        yield build_stream_event("done", None)
+        return
+
+    sources = []
+    for document in matched_documents:
+        source = Source(
+            id=document.id,
+            title=document.filename,
+            excerpt=build_source_excerpt(document, payload.question)
+        )
+        sources.append(source)
+
+    sources_data=[]
+
+    for source in sources:
+        sources_data.append(
+            {
+                "id": source.id,
+                "title": source.title,
+                "excerpt": source.excerpt
+            }
+        )
+    yield build_stream_event("sources", sources_data)
+
+    context=build_ai_context(matched_documents, payload.question)
+
+    try:
+        for text in generate_answer_stream_with_deepseek(
+            payload.question,
+            context,
+            payload.history
+        ):
+            yield build_stream_event("text", text)
+    except Exception:
+        yield build_stream_event("error", "调用 DeepSeek失败，请稍后再试")
+
+    yield build_stream_event("done", None)
