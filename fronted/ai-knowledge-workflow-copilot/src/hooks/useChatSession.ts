@@ -1,13 +1,12 @@
 ﻿import { useState } from 'react'
 import { sendChatMessage } from '../lib/api'
 import type { ChatMessage, Source } from '../type'
-import { initialMessages, sources } from '../lib/mockData'
 
 export function useChatSession(selectedKbId: number | null) {
-    const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
+    const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
-    const [currentSources, setCurrentSources] = useState<Source[]>(sources)
-    const [selectedSourceId, setSelectedSourceId] = useState<number | null>(sources[0]?.id ?? null)
+    const [currentSources, setCurrentSources] = useState<Source[]>([])
+    const [selectedSourceId, setSelectedSourceId] = useState<number | null>(null)
 
     async function handleSendMessage(content: string) {
         if (!content.trim() || selectedKbId === null) return
