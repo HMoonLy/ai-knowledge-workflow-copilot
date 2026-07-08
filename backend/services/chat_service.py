@@ -1,10 +1,18 @@
 import json
+from langchain_core.documents import Document as LangChainDocument
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 
 from schemas import ChatRequest, ChatResponse, Source, Document
 from services.document_service import list_documents
 from services.deepseek_service import (
     generate_answer_with_deepseek,
     generate_answer_stream_with_deepseek,
+)
+
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=800,
+    chunk_overlap=100,
 )
 
 def split_question_words(question: str):
@@ -33,6 +41,19 @@ def split_question_words(question: str):
 
     return words
 
+def split_documents_to_chunks(documents:list[Document]):
+    langchain_documents = []
+
+    for document in documents:
+        langchain_document=LangChainDocument(
+            page_content=document.content,
+            metadata={
+                "document_id": document.id,
+                "filename": document.filename,
+            }
+        )
+        langchain_documents.append(langchain_document)
+    return text_splitter.split_documents(langchain_documents)
 
 def generate_chat_response(payload:ChatRequest)->ChatResponse:
     documents = list_documents(payload.knowledge_base_id)
@@ -117,27 +138,26 @@ def build_source_excerpt(document:Document,question:str):
             return document.content[start_index:end_index]
     return document.content[:150]
 
-def build_ai_context(matched_documents:list[Document],question:str):
+
+def build_ai_context(matched_documents: list[Document], question: str):
     MAX_CONTEXT_LENGTH = 3000
 
     context = ""
+    question_words = split_question_words(question)
+    chunks = split_documents_to_chunks(matched_documents)
 
-    for document in matched_documents:
+    for chunk in chunks:
         if len(context) > MAX_CONTEXT_LENGTH:
             break
 
-        context_lower = document.content.lower()
-        question_words=split_question_words(question)
+        chunk_content_lower = chunk.page_content.lower()
+
         for word in question_words:
-            word_index=context_lower.find(word)
-
-            if word_index != -1:
-                start_index=max(word_index-300,0)
-                end_index=word_index+1000
-
-                context+=f"文档：{document.filename}\n"
-                context+=f"内容：{document.content[start_index:end_index]}\n\n"
+            if word in chunk_content_lower:
+                context += f"文档：{chunk.metadata['filename']}\n"
+                context += f"内容：{chunk.page_content}\n\n"
                 break
+
     return context[:MAX_CONTEXT_LENGTH]
 
 def generate_chat_response_stream(payload:ChatRequest):

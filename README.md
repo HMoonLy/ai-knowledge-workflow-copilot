@@ -1,6 +1,6 @@
 ﻿# AI Knowledge Workflow Copilot
 
-一个面向个人知识库的 AI 问答系统。用户可以创建知识库、上传文档，并基于文档内容向 AI 提问。系统会先检索相关文档片段，再调用 DeepSeek 生成回答，同时展示引用来源。
+一个面向个人知识库的 AI 问答系统。用户可以创建知识库、上传文档，并基于文档内容向 AI 提问。系统会先解析并切分文档内容，再通过 LangChain 组织 RAG 问答链路，调用 DeepSeek 生成流式回答，同时展示引用来源。
 
 ## 在线演示
 
@@ -13,7 +13,8 @@
 
 - **知识库管理**：支持创建多个知识库，并统计每个知识库下的文档数量。
 - **文档上传解析**：支持 `.txt`、`.md`、`.pdf`、`.docx` 文档上传与文本抽取。
-- **RAG 问答流程**：根据用户问题检索相关文档内容，再把上下文发送给 DeepSeek 生成回答。
+- **LangChain RAG 链路**：使用 ChatPromptTemplate + ChatDeepSeek 组织模型调用，并通过 TextSplitter 对文档进行切片后构建上下文。
+- **流式问答体验**：后端基于 StreamingResponse 返回分段内容，前端使用 fetch reader 实时追加 AI 回答。
 - **多轮对话**：前端保留最近对话历史，后端组合历史问题与文档上下文生成回答。
 - **来源引用**：回答时返回相关文档来源，方便用户追溯答案依据。
 - **Demo Mode 兜底**：当线上后端冷启动、超时或不可用时，前端自动切换到演示模式，保证作品集稳定展示。
@@ -36,8 +37,9 @@
 - Python
 - FastAPI
 - Pydantic
-- OpenAI SDK
+- LangChain
 - DeepSeek API
+- StreamingResponse
 - pypdf
 - python-docx
 
@@ -82,8 +84,11 @@ AI Knowledge/
 ### 3. AI 问答
 
 - 基于当前知识库提问
-- 自动检索相关文档内容
-- 结合历史对话生成回答
+- 使用 LangChain TextSplitter 对文档进行切片
+- 根据用户问题检索相关文档片段并构建上下文
+- 通过 LangChain ChatPromptTemplate + ChatDeepSeek 生成回答
+- 支持流式输出，回答内容实时展示
+- 结合历史对话生成多轮回答
 - 展示答案来源文档
 
 ### 4. 演示兜底
