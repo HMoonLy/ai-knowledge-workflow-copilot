@@ -8,7 +8,7 @@
 
 - **后端健康检查**：https://ai-knowledge-workflow-copilot-api.onrender.com/health
 
-  ![image-20260708181416802](F:/Study/Typora/assets/README.assets/image-20260708181416802.png)
+![项目演示截图](docs/demo.png)
 
 > 说明：后端部署在 Render 免费实例上，可能存在冷启动或网络访问不稳定。项目已实现前端 Demo Mode 兜底机制：当后端不可用或请求超时时，前端会自动切换到演示模式，使用本地模拟数据展示知识库、文档、问答和引用来源流程。
 
