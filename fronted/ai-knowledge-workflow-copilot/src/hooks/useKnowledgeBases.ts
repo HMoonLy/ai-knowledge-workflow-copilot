@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { getKnowledgeBases, createKnowledgeBase } from '../lib/api'
 import type { KnowledgeBase } from '../type'
+import { subscribeDemoMode } from '../lib/demoMode'
 
 export function useKnowledgeBases() {
     const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([])
     const [selectedKbId, setSelectedKbId] = useState<number | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState('')
-
 
     async function reloadKnowledgeBases() {
         try {
@@ -44,9 +44,16 @@ export function useKnowledgeBases() {
         reloadKnowledgeBases()
     }, [])
 
+    useEffect(() => {
+        return subscribeDemoMode(() => {
+            reloadKnowledgeBases()
+        })
+    }, [])
+
     const selectedKnowledgeBase = knowledgeBases.find(
         (kb) => kb.id === selectedKbId
     )
+
     return {
         knowledgeBases,
         selectedKbId,
@@ -55,6 +62,6 @@ export function useKnowledgeBases() {
         errorMessage,
         setSelectedKbId,
         reloadKnowledgeBases,
-        handleCreateKnowledgeBase
+        handleCreateKnowledgeBase,
     }
 }

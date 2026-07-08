@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { getDocuments, deleteDocument } from '../lib/api'
 import type { Document } from '../type'
 
@@ -29,7 +29,7 @@ export function useDocuments(knowledgeBaseId: number | null) {
 
     async function handleDeleteDocument(documentId: number) {
         if (knowledgeBaseId === null) {
-            setDocumentsError('知识库ID为空，无法删除文档')
+            setDocumentsError('知识库 ID 为空，无法删除文档')
             return
         }
 
@@ -40,7 +40,7 @@ export function useDocuments(knowledgeBaseId: number | null) {
             await reloadDocuments()
         } catch (error) {
             setDocumentsError('删除文档失败')
-        }finally{
+        } finally {
             setDeletingDocumentId(null)
         }
     }
@@ -55,6 +55,6 @@ export function useDocuments(knowledgeBaseId: number | null) {
         documentsError,
         reloadDocuments,
         handleDeleteDocument,
-        deletingDocumentId
+        deletingDocumentId,
     }
 }

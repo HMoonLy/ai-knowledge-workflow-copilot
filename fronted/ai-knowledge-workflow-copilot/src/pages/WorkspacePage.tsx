@@ -6,8 +6,11 @@ import { useKnowledgeBases } from '../hooks/useKnowledgeBases'
 import { useChatSession } from '../hooks/useChatSession'
 import { useDocumentUpload } from '../hooks/useDocumentUpload'
 import { useDocuments } from '../hooks/useDocuments'
+import { useDemoMode } from '../hooks/useDemoMode'
 
 function WorkspacePage() {
+    const demoModeEnabled = useDemoMode()
+
     const {
         knowledgeBases,
         selectedKbId,
@@ -60,7 +63,7 @@ function WorkspacePage() {
 
     return (
         <div className="flex h-screen flex-col overflow-hidden bg-slate-100 text-slate-900">
-            <TopBar />
+            <TopBar isDemoMode={demoModeEnabled} />
             <main className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)_360px] gap-4 overflow-hidden p-4">
                 <Sidebar
                     knowledgeBases={knowledgeBases}

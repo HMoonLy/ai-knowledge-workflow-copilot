@@ -1,7 +1,8 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
+import axios from 'axios'
 import { uploadDocument } from '../lib/api'
 import type { DocumentUploadResult } from '../type'
-import axios from 'axios'
+
 export function useDocumentUpload() {
     const [isUploading, setIsUploading] = useState(false)
     const [uploadError, setUploadError] = useState<string | null>(null)
@@ -14,6 +15,7 @@ export function useDocumentUpload() {
 
             const result = await uploadDocument(file, knowledgeBaseId)
             setUploadResult(result)
+            setUploadError(null)
             return result
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -29,6 +31,7 @@ export function useDocumentUpload() {
             setIsUploading(false)
         }
     }
+
     return {
         isUploading,
         uploadResult,
