@@ -234,3 +234,29 @@ export async function sendDemoChatMessage(params: {
         sources,
     }
 }
+
+export async function sendDemoChatMessageStream(params: {
+    knowledgeBaseId: number
+    question: string
+    onSources: (sources: Source[]) => void
+    onText: (text: string) => void
+    onError: (message: string) => void
+}) {
+    try {
+        const response = await sendDemoChatMessage({
+            knowledgeBaseId: params.knowledgeBaseId,
+            question: params.question,
+        })
+
+        params.onSources(response.sources)
+
+        for (const char of response.answer) {
+            params.onText(char)
+            await new Promise((resolve) => {
+                window.setTimeout(resolve, 12)
+            })
+        }
+    } catch (error) {
+        params.onError('演示模式：生成回答失败，请稍后再试。')
+    }
+}

@@ -7,6 +7,7 @@ import {
     getDemoDocuments,
     getDemoKnowledgeBases,
     sendDemoChatMessage,
+    sendDemoChatMessageStream,
     uploadDemoDocument,
 } from './demoApi'
 
@@ -87,57 +88,65 @@ export async function sendChatMessageStream(params: {
     onText: (text: string) => void
     onError: (message: string) => void
 }) {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'}/api/chat/stream`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            knowledge_base_id: params.knowledgeBaseId,
-            question: params.question,
-            history: params.history,
-        }),
-    })
-
-    if (!response.ok || !response.body) {
-        throw new Error('stream request failed')
+    if (isDemoMode()) {
+        return sendDemoChatMessageStream(params)
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder('utf-8')
-    let buffer = ''
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'}/api/chat/stream`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                knowledge_base_id: params.knowledgeBaseId,
+                question: params.question,
+                history: params.history,
+            }),
+        })
 
-    while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-
-        for (const line of lines) {
-            if (!line.trim()) continue
-
-            const event = JSON.parse(line)
-
-            if (event.type === 'sources') {
-                params.onSources(event.data)
-            }
-
-            if (event.type === 'text') {
-                params.onText(event.data)
-            }
-
-            if (event.type === 'error') {
-                params.onError(event.data)
-            }
-
-            if (event.type === 'done') {
-                return
-            }
-
+        if (!response.ok || !response.body) {
+            throw new Error('stream request failed')
         }
+
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder('utf-8')
+        let buffer = ''
+
+        while (true) {
+            const { value, done } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+
+            const lines = buffer.split('\n')
+            buffer = lines.pop() ?? ''
+
+            for (const line of lines) {
+                if (!line.trim()) continue
+
+                const event = JSON.parse(line)
+
+                if (event.type === 'sources') {
+                    params.onSources(event.data)
+                }
+
+                if (event.type === 'text') {
+                    params.onText(event.data)
+                }
+
+                if (event.type === 'error') {
+                    params.onError(event.data)
+                }
+
+                if (event.type === 'done') {
+                    return
+                }
+            }
+        }
+    } catch (error) {
+        enableDemoMode()
+        return sendDemoChatMessageStream(params)
     }
 }
 
