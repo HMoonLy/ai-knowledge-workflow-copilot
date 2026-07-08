@@ -1,11 +1,14 @@
-﻿# AI Knowledge Workflow Copilot
+# AI Knowledge Workflow Copilot
 
 一个面向个人知识库的 AI 问答系统。用户可以创建知识库、上传文档，并基于文档内容向 AI 提问。系统会先解析并切分文档内容，再通过 LangChain 组织 RAG 问答链路，调用 DeepSeek 生成流式回答，同时展示引用来源。
 
 ## 在线演示
 
 - **前端 Demo**：https://ai-knowledge-workflow-copilot.vercel.app/
+
 - **后端健康检查**：https://ai-knowledge-workflow-copilot-api.onrender.com/health
+
+  ![image-20260708181416802](F:/Study/Typora/assets/README.assets/image-20260708181416802.png)
 
 > 说明：后端部署在 Render 免费实例上，可能存在冷启动或网络访问不稳定。项目已实现前端 Demo Mode 兜底机制：当后端不可用或请求超时时，前端会自动切换到演示模式，使用本地模拟数据展示知识库、文档、问答和引用来源流程。
 
