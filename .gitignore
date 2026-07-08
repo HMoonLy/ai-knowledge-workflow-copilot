@@ -1,0 +1,29 @@
+﻿# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+
+# Runtime data
+backend/uploads/
+backend/documents.json
+backend/knowledge_bases.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+backend/.env
+fronted/ai-knowledge-workflow-copilot/.env
+fronted/ai-knowledge-workflow-copilot/.env.local
+
+# Frontend
+fronted/ai-knowledge-workflow-copilot/node_modules/
+fronted/ai-knowledge-workflow-copilot/dist/
+fronted/ai-knowledge-workflow-copilot/.vite/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
