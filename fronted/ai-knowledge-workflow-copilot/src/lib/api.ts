@@ -37,8 +37,10 @@ type DocumentApiResponse = {
     size: number
 }
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000',
+    baseURL: apiBaseUrl,
     timeout: 15000,
 })
 
@@ -93,7 +95,7 @@ export async function sendChatMessageStream(params: {
     }
 
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'}/api/chat/stream`, {
+        const response = await fetch(`${apiBaseUrl}/api/chat/stream`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

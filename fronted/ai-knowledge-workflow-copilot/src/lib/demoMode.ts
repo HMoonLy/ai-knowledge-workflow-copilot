@@ -1,4 +1,6 @@
-let demoMode = false
+let demoMode =
+    import.meta.env.VITE_FORCE_DEMO_MODE === '1' ||
+    (import.meta.env.PROD && !import.meta.env.VITE_API_BASE_URL)
 
 const demoModeEventName = 'ai-knowledge-demo-mode-change'
 
